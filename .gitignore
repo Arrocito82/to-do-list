@@ -1,3 +1,2 @@
 node_modules/
-passwords.js
-package-lock.json
+./package-lock.json

@@ -1,30 +1,27 @@
-<%- include('header'); -%>
-    <div class="box" id="heading">
-        <h1>
-            <%= listTitle %>
-        </h1>
-    </div>
-    <div class="box">
-        <% listOfItems.forEach(element => { %>
-            <div class="item">
-               
-                   
-                    <%if (element.checked==true){%>
-                        <input type="checkbox" checked>
-                    <%}else{%>
-                        <input type="checkbox" >
-                    <% } %>
-                    <p>
-                       <%= element.text %>
-                    
-                    </p>
-                
-            </div>
-            <% }); %>
-                <form  method="POST" class="item">
-                    <input type="hidden" name="idList" value="<%=idList %>">
-                    <input type="text" name="newItem" placeholder="Add new item" autocomplete="off" required>
-                    <button type="submit" name="listTitle" value="<%=listTitle %>"></button>
-                </form>
-    </div>
-    <%- include('footer'); -%>
+<%- include("header") -%>
+
+  <div class="box" id="heading">
+    <h1> <%= listTitle %> </h1>
+  </div>
+
+  <div class="box">
+    <% for (let i=0; i<newListItems.length; i++) { %>
+
+      <form action="/delete" method="post" onchange="submit();">
+
+        <div class="item">
+          <input type="hidden" name="list" value="<%=listTitle%>">
+          <input type="checkbox" name="item" value="<%=  newListItems[i].id  %>">
+          <p><%=  newListItems[i].name  %></p>
+        </div>
+      </form>
+
+      <% } %>
+
+      <form class="item" action="/" method="post">
+        <input type="text" name="newItem" placeholder="New Item" autocomplete="off">
+        <button type="submit" name="list" value="<%=listTitle%>">+</button>
+      </form>
+  </div>
+
+<%- include("footer") -%>

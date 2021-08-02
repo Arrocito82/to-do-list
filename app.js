@@ -2,149 +2,122 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
-const app = express();
-const date = require(__dirname + "/date.js");
-const port = 3000;
 const mongoose = require('mongoose');
-const password = require('./passwords');
-const uri = 'mongodb+srv://admin:' + password.mongodb + '@cluster0.b8koz.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
-mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const _ = require('lodash');
+const app = express();
 
-
-const itemSchema = new mongoose.Schema({
-    text: {
-        type: String,
-        required: [true, "Please check your data entry, no task specified!"]
-    },
-    checked: { type: Boolean, default: false }
-});
-const listSchema = new mongoose.Schema({
-    title: String,
-    due: { type: Date, default: Date.now },
-    items: [itemSchema]
-});
-const Item = new mongoose.model('Item', itemSchema);
-const List = new mongoose.model('List', listSchema);
-
-let workItems = [];
-let item1 = new Item({ text: 'Welcome to a new brand To Do List!' });
-let item2 = new Item({ text: 'Type a new item to get started.' });
-
-let items = new List({ title: 'To Do List', items: [item1, item2] });
-let worklist = new List({ title: 'Work List', items: [item1, item2] });
-let item = new Item({ text: 'otro' });
-
-// worklist.save(function (err) {
-//     if (err) return handleError(err);
-//     // saved!
-//     console.log('done!');
-//   });
-
-
-/*aqui estamos requiriendo el modulo dentro del archivo date.js y como no es algo que deba enviarse
-al browser para funcionar, si que es parte del proceso en el backend, entonces puede perfectamente 
-estar en el root
-
-La forma de usarlo es como se muestra abajo con el comando date(), ya que solo existe un modulo
-pero si fuera mas de uno variaria como se observara en el siguiente branch
-*/
-
-
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function () {
-
-    console.log('database connection established');
-});
-
-
-
-app.use(express.static("public"));
+app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
-app.set("view engine", "ejs");
+app.use(express.static("public"));
 
+// Mongoose Connection to Database
+mongoose.connect("mongodb+srv://admin:AECa6Br9n683rst@cluster0.b8koz.mongodb.net/todoListDB?retryWrites=true&w=majority",
+  {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false
+  });
 
-//every time something is display on screen is because
-//it was sent to it so that we 
-app.get("/", function (req, res) {
+//Mongoose Model Definitions
+const itemSchema = {
+  name: { type: String, required: true }
+};
+const Item = mongoose.model("Item", itemSchema);
 
-    List.findOne({ title: 'To Do List' }, function (err, result) {
-
-        res.render('list', { listTitle: result.title, listOfItems: result.items, idList: result._id });
-    });
-});
-
-app.post("/", function (request, response) {
-
-    let idList = request.body.idList
-    let text = request.body.newItem;
-    let newItem = new Item({ text: text });
-
-
-    List.findOneAndUpdate(
-
-        { _id: idList },
-        { $push: { items: newItem } }, function (err, result) {
-            // this runs after the mongoose operation
-            response.redirect('/');
-
-
-        }
-    );
-
-
-
-});
-app.post("/:list", function (request, response) {
-    let list = request.params.list;
-    let idList = request.body.idList
-    let text = request.body.newItem;
-    let newItem = new Item({ text: text });
-
-
-    List.findOneAndUpdate(
-
-        { _id: idList },
-        { $push: { items: newItem } }, function (err, result) {
-            // this runs after the mongoose operation
-            response.redirect('/' + list);
-
-
-        }
-    );
-
-
-
-});
-
-
+const listSchema={
+  name:String,
+  items:[itemSchema]
+}
+const List=mongoose.model("List",listSchema);
+const item1 = new Item({ name: "Feed Hashiko!" });
+const item2 = new Item({ name: "Clean my bedroom!" });
+const item3 = new Item({ name: "Watch a movie!" });
+const defaultItems = [item1,item2,item3];
 
 app.get("/about", function (req, res) {
-    res.render('about');
+  res.render("about");
 });
 
-//este es como decir el metodo para cargar la pagina
-app.get("/:list", function (req, res) {
-    let list = req.params.list;
+app.get("/", function (req, res) {
 
-    List.exists({ title: list }, function (err, result) {
-        if (err) {
-            console.log(err);
-        } else if (result == true) {
-            List.findOne({ title: list }, function (err, result) {
-                res.render('list', { listTitle: result.title, listOfItems: result.items, idList: result._id });
+  Item.find({}, function (err, results) {
+    if (err) {
+      console.log("Error: ", err.message)
+    } else {
 
-            });
-        } else {
-            let items = new List({ title: list, items: [item1, item2] });
-            items.save();
-            res.redirect(req.originalUrl);
-
-        }
+      res.render("list", { listTitle: 'Today', newListItems: results });
     }
-    );
+  });
+
+});
+app.get("/:customListName", function (req, res) {
+  
+  let customListName=_.capitalize(req.params.customListName);
+  List.findOne({name:customListName}, function (err, foundList) {
+    if (err) {
+      console.log("Error: ", err.message)
+    } else if(foundList) {
+      
+      res.render("list", { listTitle:foundList.name, newListItems: foundList.items });
+    }else{
+
+      let newList=new List({
+        name: customListName,
+        items:defaultItems
+      });
+      newList.save();
+      res.redirect("/"+customListName);
+    }
+  });
+
 });
 
-app.listen(port, function () {
-    console.log("Server started on port " + port);
+app.post("/", function (req, res) {
+
+  const itemName = req.body.newItem;
+  const list = req.body.list;
+  const newItem = new Item({ name: itemName });
+
+  if(list=='Today'){
+    newItem.save();
+    res.redirect('/');
+  }else{
+    
+    List.findOne({name:list},function(err,resultList){
+      resultList.items.push(newItem);
+      resultList.save();
+      res.redirect('/'+list);
+    });  
+  }
+});
+
+app.post("/delete", function (req, res) {
+  let itemID = req.body.item;
+  const list = req.body.list;
+  if(list=="Today"){
+
+    Item.findByIdAndRemove(itemID, function (err, results) {
+      if (err) {
+        console.log("Error: ", err.message);
+      } else {
+        if(results){
+          
+          res.redirect('/');
+        }
+      }
+    });
+  }else{
+    List.findOne({name:list},function(err,resultList){
+      resultList.items.pull(itemID);
+      resultList.save();
+      res.redirect('/'+list);
+    });
+  
+  }
+
+});
+
+
+app.listen(3000, function () {
+  console.log("Server started on port 3000");
 });
