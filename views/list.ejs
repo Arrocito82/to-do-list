@@ -7,15 +7,24 @@
     <div class="box">
         <% listOfItems.forEach(element => { %>
             <div class="item">
-                <input type="checkbox">
-                <p>
-                    <%= element %>
-                </p>
+               
+                   
+                    <%if (element.checked==true){%>
+                        <input type="checkbox" checked>
+                    <%}else{%>
+                        <input type="checkbox" >
+                    <% } %>
+                    <p>
+                       <%= element.text %>
+                    
+                    </p>
+                
             </div>
             <% }); %>
-                <form action="/" method="POST" class="item">
-                    <input type="text" name="newItem" placeholder="Add new item" autocomplete="off">
-                    <button type="submit" name="listTitle" value=<%=listTitle %> >+</button>
+                <form  method="POST" class="item">
+                    <input type="hidden" name="idList" value="<%=idList %>">
+                    <input type="text" name="newItem" placeholder="Add new item" autocomplete="off" required>
+                    <button type="submit" name="listTitle" value="<%=listTitle %>"></button>
                 </form>
     </div>
     <%- include('footer'); -%>

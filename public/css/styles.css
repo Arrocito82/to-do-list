@@ -1,7 +1,7 @@
 html {
     background-color: #d4f3ef;
     background-image: -webkit-linear-gradient(70deg, #abf0e9 50%, #d4f3ef 50%);
-    min-height: 1000px;
+    min-height: 100vh;
     font-family: sans-serif;
     letter-spacing: 0.1rem;
     position: relative;
@@ -82,9 +82,9 @@ form {
 }
 
 button {
-    min-height: 50px;
+    height: 50px;
     width: 50px;
-    border-radius: 50%;
+    border-radius: 1.5rem;
     border-color: transparent;
     background-color: #abf0e9;
     color: #fff;
