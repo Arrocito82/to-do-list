@@ -50,13 +50,15 @@ app.get('/work', function(request, response) {
 app.get("/about", function(req, res) {
     res.render('about');
 });
-
+// esta funcion renderiza los datos del objeto json en el archivo about.ejs cuando alguien accede a la ruta /about/:carnet
 app.get("/about/:carnet", function(request, res) {
+    // objeto json
     data={
         carnet:request.params.carnet,
         nombre: 'Andrea Melissa',
         apellidos:'Monterrosa Morales'
     }
+
     res.render('about',data);
 });
 
