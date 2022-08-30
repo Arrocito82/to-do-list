@@ -51,6 +51,14 @@ app.get("/about", function(req, res) {
     res.render('about');
 });
 
+app.get("/about/:carnet", function(request, res) {
+    data={
+        carnet:request.params.carnet,
+        nombre: 'Andrea Melissa',
+        apellidos:'Monterrosa Morales'
+    }
+    res.render('about',data);
+});
 
 app.listen(3000, function() {
     console.log("Everything ok");
